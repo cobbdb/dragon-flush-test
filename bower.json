@@ -1,0 +1,6 @@
+{
+  "name": "dragon-flush-test",
+  "main": "dist/dragon-flush-test.min.js",
+  "dependencies": {
+  }
+}
