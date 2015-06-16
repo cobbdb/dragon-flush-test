@@ -1,39 +1,31 @@
 var $ = require('dragonjs');
 
-/**
- * @return {Sprite}
- */
-module.exports = function (opts) {
-    return $.Sprite({
-        name: 'target',
-        collisionSets: [
-            $.collisions
-        ],
-        mask: $.Rectangle(
-            $.Point(),
-            $.Dimension(64, 64)
-        ),
-        strips: {
-            'target': $.AnimationStrip({
-                sheet: $.SpriteSheet({
-                    src: 'target.png'
-                }),
-                start: $.Point(10, 10),
-                size: $.Dimension(64, 64),
-                frames: 5,
-                speed: 10
-            })
-        },
-        startingStrip: 'target',
-        pos: $.Point(100, 100),
-        depth: 2,
-        on: {
-            'colliding/screentap': function () {
-            }
+module.exports = $.ClearSprite({
+    name: 'target',
+    pos: $.Point(
+        $.canvas.width / 2 - 3,
+        $.canvas.height / 2 - 3
+    ),
+    size: $.Dimension(6, 6),
+    mask: $.Circle(),
+    depth: 10
+}).extend({
+    draw: function (ctx) {
+        ctx.fillStyle = '#b93a38';
+        ctx.beginPath();
+        ctx.arc(
+            this.pos.x,
+            this.pos.y,
+            this.mask.radius,
+            0, 2 * 3.1415
+        );
+        ctx.fill();
+        this.base.draw(ctx);
+    },
+    update: function () {
+        if ($.Mouse.is.dragging) {
+            this.move($.Mouse.offset);
         }
-    }).extend({
-        update: function () {
-            this.base.update();
-        }
-    });
-};
+        this.base.update();
+    }
+});

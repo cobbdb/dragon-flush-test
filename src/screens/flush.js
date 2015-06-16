@@ -1,4 +1,5 @@
-var $ = require('dragonjs');
+var $ = require('dragonjs'),
+    Static = require('../sprites/static.js');
 
 module.exports = $.Screen({
     name: 'flush',
@@ -6,8 +7,8 @@ module.exports = $.Screen({
         require('../collisions/flush.js')
     ],
     spriteSet: [
-        require('../sprites/static.js'),
-        require('../sprites/target.js')
+        require('../sprites/target.js'),
+        require('../sprites/static.js')
     ],
     one: {
         ready: function () {
@@ -15,7 +16,9 @@ module.exports = $.Screen({
         }
     }
 }).extend({
-    draw: function (ctx) {
-        this.base.draw(ctx);
+    draw: function (ctx, debug) {
+        ctx.fillStyle = '#fafafa';
+        ctx.fillRect(0, 0, $.canvas.width, $.canvas.height);
+        this.base.draw(ctx, debug);
     }
 });
