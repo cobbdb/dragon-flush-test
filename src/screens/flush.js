@@ -1,5 +1,5 @@
 var $ = require('dragonjs'),
-    Static = require('../sprites/static.js');
+    Target = require('../sprites/target.js');
 
 module.exports = $.Screen({
     name: 'flush',
@@ -7,8 +7,18 @@ module.exports = $.Screen({
         require('../collisions/flush.js')
     ],
     spriteSet: [
-        require('../sprites/target.js'),
-        require('../sprites/static.js')
+        require('../sprites/static.js'),
+        Target('target1', $.Point(
+            $.canvas.width * 0.2,
+            $.canvas.height * 0.1
+        )),
+        Target('target2', $.Point(
+            $.canvas.width * 0.9,
+            $.canvas.height * 0.8
+        )),
+        require('../sprites/line.js'),
+        require('../sprites/real.js'),
+        require('../sprites/ghost-top.js')
     ],
     one: {
         ready: function () {

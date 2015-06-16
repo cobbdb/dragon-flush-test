@@ -1,17 +1,18 @@
 ﻿var $ = require('dragonjs');
 
 module.exports = $.ClearSprite({
-    name: 'static',
-    pos: $.Point(
-        $.canvas.width / 2 - 50,
-        $.canvas.height / 2 - 50
-    ),
-    size: $.Dimension(100, 100),
+    name: 'real',
+    size: $.Dimension(30, 30),
     mask: $.Rectangle(),
-    depth: 0
+    depth: 1
 }).extend({
+    update: function () {
+        this.move(
+            $.screen('flush').sprite('target1').pos
+        );
+    },
     draw: function (ctx) {
-        ctx.fillStyle = '#666';
+        ctx.fillStyle = '#e1e1e1';
         ctx.fillRect(
             this.pos.x,
             this.pos.y,

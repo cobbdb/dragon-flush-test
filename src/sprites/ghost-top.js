@@ -1,14 +1,20 @@
 var $ = require('dragonjs');
 
-module.exports = function (opts) {
+module.exports = function () {
     return $.ClearSprite({
-        pos: opts.pos,
-        size: $.Dimension(20, 20),
+        name: 'ghost',
+        size: $.Dimension(30, 30),
         mask: $.Rectangle(),
-        depth: 5
+        depth: 1
     }).extend({
+        update: function () {
+            this.move(
+                $.screen('flush').sprite('target1').pos
+            );
+        },
         draw: function (ctx) {
             ctx.strokeStyle = '#63869c';
+            ctx.lineWidth = 1;
             ctx.strokeRect(
                 this.pos.x,
                 this.pos.y,

@@ -843,6 +843,7 @@ module.exports = {
     collisions: require('./dragon-collisions.js'),
 
     screen: Game.screen,
+    sprite: Game.sprite,
     addScreens: Game.addScreens,
     removeScreen: Game.removeScreen,
     run: Game.run.bind(Game),
@@ -1113,6 +1114,9 @@ module.exports = function (pos, rad) {
         right: pos.x + rad,
         bottom: pos.y + rad,
         left: pos.x - rad,
+        center: function () {
+            return Point(this.x, this.y);
+        },
         draw: function (ctx) {
             ctx.beginPath();
             ctx.lineWidth = 1;
@@ -1367,6 +1371,12 @@ module.exports = function (pos, size) {
         right: pos.x + size.width || 0,
         bottom: pos.y + size.height || 0,
         left: pos.x || 0,
+        center: function () {
+            return Point(
+                this.x + this.width / 2,
+                this.y + this.height / 2
+            );
+        },
         /**
          * @param {Point} pos
          */
@@ -1415,6 +1425,12 @@ module.exports = function (opts) {
     return BaseClass({
         x: pos.x,
         y: pos.y,
+        width: 0,
+        height: 0,
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0,
         pos: function () {
             return Point(this.x, this.y);
         },
@@ -2747,7 +2763,7 @@ $.run(false);
 
 },{"./screens/flush.js":54,"dragonjs":13}],54:[function(require,module,exports){
 var $ = require('dragonjs'),
-    Static = require('../sprites/static.js');
+    Target = require('../sprites/target.js');
 
 module.exports = $.Screen({
     name: 'flush',
@@ -2755,8 +2771,17 @@ module.exports = $.Screen({
         require('../collisions/flush.js')
     ],
     spriteSet: [
-        require('../sprites/target.js'),
-        require('../sprites/static.js')
+        require('../sprites/static.js'),
+        Target('target1', $.Point(
+            $.canvas.width * 0.2,
+            $.canvas.height * 0.1
+        )),
+        Target('target2', $.Point(
+            $.canvas.width * 0.9,
+            $.canvas.height * 0.8
+        )),
+        require('../sprites/line.js'),
+        require('../sprites/real.js')
     ],
     one: {
         ready: function () {
@@ -2771,19 +2796,52 @@ module.exports = $.Screen({
     }
 });
 
-},{"../collisions/flush.js":52,"../sprites/static.js":55,"../sprites/target.js":56,"dragonjs":13}],55:[function(require,module,exports){
+},{"../collisions/flush.js":52,"../sprites/line.js":55,"../sprites/real.js":56,"../sprites/static.js":57,"../sprites/target.js":58,"dragonjs":13}],55:[function(require,module,exports){
+var $ = require('dragonjs'),
+    from = $.Point(),
+    to = $.Point();
+
+module.exports = $.ClearSprite({
+    name: 'line',
+    depth: 10
+}).extend({
+    update: function () {
+        var tar1 = $.screen('flush').sprite('target1').mask,
+            tar2 = $.screen('flush').sprite('target2').mask,
+            m = (tar1.y - tar2.y) / (tar1.x - tar2.x),
+            b = tar1.y - m * tar1.x;
+        from.x = 0;
+        from.y = b;
+        to.x = $.canvas.width;
+        to.y = m * $.canvas.width + b;
+    },
+    draw: function (ctx) {
+        ctx.strokeStyle = '#73ff00';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(from.x, from.y);
+        ctx.lineTo(to.x, to.y);
+        ctx.stroke();
+    }
+});
+
+},{"dragonjs":13}],56:[function(require,module,exports){
 var $ = require('dragonjs');
 
 module.exports = $.ClearSprite({
-    pos: $.Point(
-        $.canvas.width / 2 - 50,
-        $.canvas.height / 2 - 50
-    ),
-    size: $.Dimension(100, 100),
-    mask: $.Rectangle()
+    name: 'real',
+    pos: $.Point(),
+    size: $.Dimension(30, 30),
+    mask: $.Rectangle(),
+    depth: 1
 }).extend({
+    update: function () {
+        this.move(
+            $.screen('flush').sprite('target1').pos
+        );
+    },
     draw: function (ctx) {
-        ctx.fillStyle = '#333';
+        ctx.fillStyle = '#e1e1e1';
         ctx.fillRect(
             this.pos.x,
             this.pos.y,
@@ -2793,36 +2851,62 @@ module.exports = $.ClearSprite({
     }
 });
 
-},{"dragonjs":13}],56:[function(require,module,exports){
+},{"dragonjs":13}],57:[function(require,module,exports){
 var $ = require('dragonjs');
 
 module.exports = $.ClearSprite({
+    name: 'static',
     pos: $.Point(
-        $.canvas.width / 2 - 4,
-        $.canvas.height / 2 - 4
+        $.canvas.width / 2 - 50,
+        $.canvas.height / 2 - 50
     ),
-    size: $.Dimension(8, 8),
-    mask: $.Circle(),
-    depth: 10
+    size: $.Dimension(100, 100),
+    mask: $.Rectangle(),
+    depth: 0
 }).extend({
     draw: function (ctx) {
-        ctx.fillStyle = '#b93a38';
-        ctx.beginPath();
-        ctx.arc(
+        ctx.fillStyle = '#666';
+        ctx.fillRect(
             this.pos.x,
             this.pos.y,
-            this.mask.radius,
-            0, 2 * 3.1415
+            this.size.width,
+            this.size.height
         );
-        ctx.fill();
-        this.base.draw(ctx);
-    },
-    update: function () {
-        if ($.Mouse.is.dragging) {
-            this.move($.Mouse.offset);
-        }
-        this.base.update();
     }
 });
+
+},{"dragonjs":13}],58:[function(require,module,exports){
+var $ = require('dragonjs');
+
+module.exports = function (name, pos) {
+    return $.ClearSprite({
+        name: name,
+        pos: pos,
+        size: $.Dimension(8, 8),
+        mask: $.Circle(),
+        depth: 100,
+        collisionSets: [
+            $.collisions
+        ],
+        on: {
+            'colliding/screendrag': function () {
+                this.move($.Mouse.offset);
+            }
+        }
+    }).extend({
+        draw: function (ctx) {
+            ctx.fillStyle = '#b93a38';
+            ctx.beginPath();
+            ctx.arc(
+                this.pos.x,
+                this.pos.y,
+                this.mask.radius,
+                0, 2 * 3.1415
+            );
+            ctx.fill();
+            this.base.draw(ctx);
+        }
+    });
+};
 
 },{"dragonjs":13}]},{},[53]);
