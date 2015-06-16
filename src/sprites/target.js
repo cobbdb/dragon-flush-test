@@ -1,7 +1,6 @@
 var $ = require('dragonjs');
 
 module.exports = function (name, pos) {
-    var dragging = false;
     return $.ClearSprite({
         name: name,
         pos: pos,
@@ -10,18 +9,10 @@ module.exports = function (name, pos) {
         depth: 100,
         collisionSets: [
             $.collisions
-        ],
-        on: {
-            'colliding/screendrag': function () {
-                dragging = true;
-                $.Mouse.on.up(function () {
-                    dragging = false;
-                });
-            }
-        }
+        ]
     }).extend({
         update: function () {
-            if (dragging) {
+            if (this.dragging) {
                 this.move($.Mouse.offset);
             }
             this.base.update();
