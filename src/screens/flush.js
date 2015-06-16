@@ -9,16 +9,19 @@ module.exports = $.Screen({
     spriteSet: [
         require('../sprites/static.js'),
         Target('target1', $.Point(
-            $.canvas.width * 0.2,
-            $.canvas.height * 0.1
+            $.canvas.width / 2,
+            $.canvas.height / 2 - 60
         )),
         Target('target2', $.Point(
-            $.canvas.width * 0.9,
-            $.canvas.height * 0.8
+            $.canvas.width * 0.3,
+            $.canvas.height * 0.1
         )),
         require('../sprites/line.js'),
         require('../sprites/real.js'),
-        require('../sprites/ghost-top.js')
+        require('../sprites/ghost-top.js'),
+        require('../sprites/ghost-right.js'),
+        require('../sprites/ghost-bottom.js'),
+        require('../sprites/ghost-left.js')
     ],
     one: {
         ready: function () {

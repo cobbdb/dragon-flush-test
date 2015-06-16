@@ -2773,15 +2773,19 @@ module.exports = $.Screen({
     spriteSet: [
         require('../sprites/static.js'),
         Target('target1', $.Point(
-            $.canvas.width * 0.2,
-            $.canvas.height * 0.1
+            $.canvas.width / 2,
+            $.canvas.height / 2 - 60
         )),
         Target('target2', $.Point(
-            $.canvas.width * 0.9,
-            $.canvas.height * 0.8
+            $.canvas.width * 0.3,
+            $.canvas.height * 0.1
         )),
         require('../sprites/line.js'),
-        require('../sprites/real.js')
+        require('../sprites/real.js'),
+        require('../sprites/ghost-top.js'),
+        require('../sprites/ghost-right.js'),
+        require('../sprites/ghost-bottom.js'),
+        require('../sprites/ghost-left.js')
     ],
     one: {
         ready: function () {
@@ -2796,24 +2800,113 @@ module.exports = $.Screen({
     }
 });
 
-},{"../collisions/flush.js":52,"../sprites/line.js":55,"../sprites/real.js":56,"../sprites/static.js":57,"../sprites/target.js":58,"dragonjs":13}],55:[function(require,module,exports){
+},{"../collisions/flush.js":52,"../sprites/ghost-bottom.js":55,"../sprites/ghost-left.js":56,"../sprites/ghost-right.js":57,"../sprites/ghost-top.js":58,"../sprites/line.js":60,"../sprites/real.js":61,"../sprites/static.js":62,"../sprites/target.js":63,"dragonjs":13}],55:[function(require,module,exports){
+var $ = require('dragonjs'),
+    Ghost = require('./ghost.js'),
+    line = require('./line.js');
+
+module.exports = Ghost().extend({
+    update: function () {
+        var ypos = $.screen('flush').sprite('static').mask.bottom;
+        this.move($.Point(
+            line.solveX(ypos),
+            ypos
+        ));
+    }
+});
+
+},{"./ghost.js":59,"./line.js":60,"dragonjs":13}],56:[function(require,module,exports){
+var $ = require('dragonjs'),
+    Ghost = require('./ghost.js'),
+    line = require('./line.js');
+
+module.exports = Ghost().extend({
+    update: function () {
+        var xpos = $.screen('flush').sprite('static').mask.right;
+        this.move($.Point(
+            xpos,
+            line.solveY(xpos)
+        ));
+    }
+});
+
+},{"./ghost.js":59,"./line.js":60,"dragonjs":13}],57:[function(require,module,exports){
+var $ = require('dragonjs'),
+    Ghost = require('./ghost.js'),
+    line = require('./line.js');
+
+module.exports = Ghost().extend({
+    update: function () {
+        var xpos = $.screen('flush').sprite('static').pos.x - this.size.width;
+        this.move($.Point(
+            xpos,
+            line.solveY(xpos)
+        ));
+    }
+});
+
+},{"./ghost.js":59,"./line.js":60,"dragonjs":13}],58:[function(require,module,exports){
+var $ = require('dragonjs'),
+    Ghost = require('./ghost.js'),
+    line = require('./line.js');
+
+module.exports = Ghost().extend({
+    update: function () {
+        var ypos = $.screen('flush').sprite('static').pos.y - this.size.height;
+        this.move($.Point(
+            line.solveX(ypos),
+            ypos
+        ));
+    }
+});
+
+},{"./ghost.js":59,"./line.js":60,"dragonjs":13}],59:[function(require,module,exports){
+var $ = require('dragonjs');
+
+module.exports = function () {
+    return $.ClearSprite({
+        size: $.Dimension(30, 30),
+        mask: $.Rectangle(),
+        depth: 50
+    }).extend({
+        draw: function (ctx) {
+            ctx.strokeStyle = '#63869c';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(
+                this.pos.x,
+                this.pos.y,
+                this.size.width,
+                this.size.height
+            );
+        }
+    });
+};
+
+},{"dragonjs":13}],60:[function(require,module,exports){
 var $ = require('dragonjs'),
     from = $.Point(),
     to = $.Point();
 
 module.exports = $.ClearSprite({
-    name: 'line',
-    depth: 10
+    depth: 80
 }).extend({
+    solveX: function (y) {
+        return (y - this.b) / this.m;
+    },
+    solveY: function (x) {
+        return this.m * x + this.b;
+    },
+    m: 0,
+    b: 0,
     update: function () {
         var tar1 = $.screen('flush').sprite('target1').mask,
-            tar2 = $.screen('flush').sprite('target2').mask,
-            m = (tar1.y - tar2.y) / (tar1.x - tar2.x),
-            b = tar1.y - m * tar1.x;
+            tar2 = $.screen('flush').sprite('target2').mask;
+        this.m = (tar1.y - tar2.y) / (tar1.x - tar2.x);
+        this.b = tar1.y - this.m * tar1.x;
         from.x = 0;
-        from.y = b;
+        from.y = this.b;
         to.x = $.canvas.width;
-        to.y = m * $.canvas.width + b;
+        to.y = this.m * $.canvas.width + this.b;
     },
     draw: function (ctx) {
         ctx.strokeStyle = '#73ff00';
@@ -2825,12 +2918,10 @@ module.exports = $.ClearSprite({
     }
 });
 
-},{"dragonjs":13}],56:[function(require,module,exports){
+},{"dragonjs":13}],61:[function(require,module,exports){
 var $ = require('dragonjs');
 
 module.exports = $.ClearSprite({
-    name: 'real',
-    pos: $.Point(),
     size: $.Dimension(30, 30),
     mask: $.Rectangle(),
     depth: 1
@@ -2851,7 +2942,7 @@ module.exports = $.ClearSprite({
     }
 });
 
-},{"dragonjs":13}],57:[function(require,module,exports){
+},{"dragonjs":13}],62:[function(require,module,exports){
 var $ = require('dragonjs');
 
 module.exports = $.ClearSprite({
@@ -2875,10 +2966,11 @@ module.exports = $.ClearSprite({
     }
 });
 
-},{"dragonjs":13}],58:[function(require,module,exports){
+},{"dragonjs":13}],63:[function(require,module,exports){
 var $ = require('dragonjs');
 
 module.exports = function (name, pos) {
+    var dragging = false;
     return $.ClearSprite({
         name: name,
         pos: pos,
@@ -2890,10 +2982,19 @@ module.exports = function (name, pos) {
         ],
         on: {
             'colliding/screendrag': function () {
-                this.move($.Mouse.offset);
+                dragging = true;
+                $.Mouse.on.up(function () {
+                    dragging = false;
+                });
             }
         }
     }).extend({
+        update: function () {
+            if (dragging) {
+                this.move($.Mouse.offset);
+            }
+            this.base.update();
+        },
         draw: function (ctx) {
             ctx.fillStyle = '#b93a38';
             ctx.beginPath();

@@ -1,6 +1,7 @@
 var $ = require('dragonjs');
 
 module.exports = function (name, pos) {
+    var dragging = false;
     return $.ClearSprite({
         name: name,
         pos: pos,
@@ -12,10 +13,19 @@ module.exports = function (name, pos) {
         ],
         on: {
             'colliding/screendrag': function () {
-                this.move($.Mouse.offset);
+                dragging = true;
+                $.Mouse.on.up(function () {
+                    dragging = false;
+                });
             }
         }
     }).extend({
+        update: function () {
+            if (dragging) {
+                this.move($.Mouse.offset);
+            }
+            this.base.update();
+        },
         draw: function (ctx) {
             ctx.fillStyle = '#b93a38';
             ctx.beginPath();

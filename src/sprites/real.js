@@ -1,7 +1,6 @@
 ﻿var $ = require('dragonjs');
 
 module.exports = $.ClearSprite({
-    name: 'real',
     size: $.Dimension(30, 30),
     mask: $.Rectangle(),
     depth: 1
