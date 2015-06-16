@@ -9,7 +9,12 @@ module.exports = function (name, pos) {
         depth: 100,
         collisionSets: [
             $.collisions
-        ]
+        ],
+        on: {
+            'collide/screendrag': function () {
+                console.debug('dragging!');
+            }
+        }
     }).extend({
         update: function () {
             if (this.dragging) {

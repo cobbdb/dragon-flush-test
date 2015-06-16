@@ -671,7 +671,8 @@ module.exports = function (opts) {
 var Counter = require('./util/id-counter.js'),
     Rectangle = require('./geom/rectangle.js'),
     Point = require('./geom/point.js'),
-    Item = require('./item.js');
+    Item = require('./item.js'),
+    Mouse = require('./io/mouse.js');
 
 /**
  * @class CollisionItem
@@ -750,10 +751,22 @@ module.exports = function (opts) {
             this.move(target);
         }
     };
+    opts.on['collide/screendrag'] = [].concat(
+        opts.on['collide/screendrag'] || [],
+        function () {
+            if (!this.dragging) {
+                this.dragging = true;
+                Mouse.on.up(function () {
+                    this.dragging = false;
+                }, this);
+            }
+        }
+    );
 
     return Item(opts).extend({
         id: Counter.nextId,
         name: opts.name || 'dragon-collidable',
+        dragging: false,
         solid: opts.solid || false,
         mask: opts.mask || Rectangle(),
         offset: opts.offset || Point(),
@@ -770,6 +783,9 @@ module.exports = function (opts) {
                 this.mask.move(newPos);
             }
         },
+        /**
+         * @param {Shape} mask
+         */
         intersects: function (mask) {
             return this.mask.intersects(mask);
         },
@@ -806,7 +822,7 @@ module.exports = function (opts) {
     });
 };
 
-},{"./geom/point.js":19,"./geom/rectangle.js":21,"./item.js":32,"./util/id-counter.js":47}],13:[function(require,module,exports){
+},{"./geom/point.js":19,"./geom/rectangle.js":21,"./io/mouse.js":31,"./item.js":32,"./util/id-counter.js":47}],13:[function(require,module,exports){
 var Game = require('./game.js'),
     SetUtil = require('./util/set.js'),
     ObjUtil = require('./util/object.js');
@@ -1523,14 +1539,14 @@ module.exports = function (opts) {
 
     opts = opts || {};
     for (name in opts.events) {
-        events[name] = [
+        events[name] = [].concat(
             opts.events[name]
-        ];
+        );
     }
     for (name in opts.singles) {
-        singles[name] = [
+        singles[name] = [].concat(
             opts.singles[name]
-        ];
+        );
     }
 
     return BaseClass.Interface({
@@ -2970,7 +2986,6 @@ module.exports = $.ClearSprite({
 var $ = require('dragonjs');
 
 module.exports = function (name, pos) {
-    var dragging = false;
     return $.ClearSprite({
         name: name,
         pos: pos,
@@ -2981,16 +2996,13 @@ module.exports = function (name, pos) {
             $.collisions
         ],
         on: {
-            'colliding/screendrag': function () {
-                dragging = true;
-                $.Mouse.on.up(function () {
-                    dragging = false;
-                });
+            'collide/screendrag': function () {
+                console.debug('dragging!');
             }
         }
     }).extend({
         update: function () {
-            if (dragging) {
+            if (this.dragging) {
                 this.move($.Mouse.offset);
             }
             this.base.update();
