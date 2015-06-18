@@ -3,11 +3,13 @@ var $ = require('dragonjs'),
     line = require('./line.js');
 
 module.exports = Ghost().extend({
+    name: 'T',
     update: function () {
         var ypos = $.screen('flush').sprite('static').pos.y - this.size.height;
         this.move($.Point(
             line.solveX(ypos) || $.canvas.width / 2,
             ypos
         ));
+        this.base.update();
     }
 });

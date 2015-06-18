@@ -8,7 +8,8 @@ module.exports = $.ClearSprite({
     ),
     size: $.Dimension(100, 100),
     mask: $.Rectangle(),
-    depth: 0
+    depth: 0,
+    collisionSets: require('../collisions/flush.js')
 }).extend({
     draw: function (ctx) {
         ctx.fillStyle = '#666';

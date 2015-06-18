@@ -1,5 +1,6 @@
 var $ = require('dragonjs'),
-    Target = require('../sprites/target.js');
+    Target = require('../sprites/target.js'),
+    Label = require('../sprites/drag-label.js');
 
 module.exports = $.Screen({
     name: 'flush',
@@ -12,12 +13,19 @@ module.exports = $.Screen({
             $.canvas.width / 2,
             $.canvas.height / 2 - 60
         )),
+        Label($.Point(
+            $.canvas.width / 2 + 10,
+            $.canvas.height / 2 - 60 - 18
+        )),
         Target('target2', $.Point(
             $.canvas.width * 0.3,
             $.canvas.height * 0.1
         )),
+        Label($.Point(
+            $.canvas.width * 0.3 + 10,
+            $.canvas.height * 0.1 - 18
+        )),
         require('../sprites/line.js'),
-        require('../sprites/real.js'),
         require('../sprites/ghost-top.js'),
         require('../sprites/ghost-right.js'),
         require('../sprites/ghost-bottom.js'),
