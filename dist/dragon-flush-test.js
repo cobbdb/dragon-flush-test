@@ -685,13 +685,9 @@ var Counter = require('./util/id-counter.js'),
 module.exports = function (opts) {
     var activeCollisions = {},
         collisionsThisFrame = {},
-        collisionSets = [],
         updated = false,
-        lastPos;
-
-    if (opts.collisionSets) {
-        collisionSets = [].concat(opts.collisionSets);
-    }
+        lastPos,
+        collisionSets = [].concat(opts.collisionSets || []);
 
     function classify(E) {
         return {
@@ -751,6 +747,8 @@ module.exports = function (opts) {
             this.move(target);
         }
     };
+
+    // Provide easy way to track when dragged.
     opts.on['collide/screendrag'] = [].concat(
         opts.on['collide/screendrag'] || [],
         function () {
@@ -2053,14 +2051,14 @@ module.exports = CollisionItem({
 var SpriteSet = require('./sprite-set.js');
 
 /**
- * # Screen
+ * @class Screen
+ * @extends SpriteSet
  * @param {Array|Sprite} [opts.spriteSet]
  * @param {Array|CollisionHandler} [opts.collisionSets]
  * @param {String} opts.name
  * @param {Number} [opts.depth] Defaults to 0.
  * @param {Object} [opts.on] Dictionary of events.
  * @param {Object} [opts.one] Dictionary of one-time events.
- * @return {Screen}
  */
 module.exports = function (opts) {
     var loaded = false,
@@ -2181,9 +2179,9 @@ var Counter = require('./util/id-counter.js'),
     Collection = require('./collection.js');
 
 /**
- * # Sprite Set
+ * @class SpriteSet
+ * @extends Collection
  * Item Collection specifically for handing Sprites.
- * @return {SpriteSet}
  */
 module.exports = function (opts) {
     var spritesToAdd = [],
@@ -2254,8 +2252,8 @@ module.exports = function (opts) {
     Util.mergeDefaults(opts, {
         name: 'dragon-texture-sprite',
         startingStrip: opts.startingStrip || global.Object.keys(stripMap)[0],
-        size: (stripMap[opts.startingStrip] || {}).size
     });
+    opts.size = opts.size || (stripMap[opts.startingStrip] || {}).size;
 
     return ClearSprite(opts).extend({
         strip: stripMap[opts.startingStrip],
@@ -2825,7 +2823,7 @@ module.exports = Ghost().extend({
     update: function () {
         var ypos = $.screen('flush').sprite('static').mask.bottom;
         this.move($.Point(
-            line.solveX(ypos),
+            line.solveX(ypos) || $.canvas.width / 2,
             ypos
         ));
     }
@@ -2841,7 +2839,7 @@ module.exports = Ghost().extend({
         var xpos = $.screen('flush').sprite('static').mask.right;
         this.move($.Point(
             xpos,
-            line.solveY(xpos)
+            line.solveY(xpos) || 0
         ));
     }
 });
@@ -2856,7 +2854,7 @@ module.exports = Ghost().extend({
         var xpos = $.screen('flush').sprite('static').pos.x - this.size.width;
         this.move($.Point(
             xpos,
-            line.solveY(xpos)
+            line.solveY(xpos) || $.canvas.height
         ));
     }
 });
@@ -2870,7 +2868,7 @@ module.exports = Ghost().extend({
     update: function () {
         var ypos = $.screen('flush').sprite('static').pos.y - this.size.height;
         this.move($.Point(
-            line.solveX(ypos),
+            line.solveX(ypos) || $.canvas.width / 2,
             ypos
         ));
     }
@@ -2899,6 +2897,7 @@ module.exports = function () {
 };
 
 },{"dragonjs":13}],60:[function(require,module,exports){
+(function (global){
 var $ = require('dragonjs'),
     from = $.Point(),
     to = $.Point();
@@ -2907,22 +2906,25 @@ module.exports = $.ClearSprite({
     depth: 80
 }).extend({
     solveX: function (y) {
-        return (y - this.b) / this.m;
+        return this.finite() ? (y - this.b) / this.m : null;
     },
     solveY: function (x) {
-        return this.m * x + this.b;
+        return this.finite() ? this.m * x + this.b : null;
     },
     m: 0,
     b: 0,
+    finite: function () {
+        return global.isFinite(this.m);
+    },
     update: function () {
         var tar1 = $.screen('flush').sprite('target1').mask,
             tar2 = $.screen('flush').sprite('target2').mask;
         this.m = (tar1.y - tar2.y) / (tar1.x - tar2.x);
         this.b = tar1.y - this.m * tar1.x;
-        from.x = 0;
-        from.y = this.b;
-        to.x = $.canvas.width;
-        to.y = this.m * $.canvas.width + this.b;
+        from.x = this.finite() ? 0 : $.canvas.width / 2;
+        from.y = this.finite() ? this.b : 0;
+        to.x = this.finite() ? $.canvas.width : $.canvas.width / 2;
+        to.y = this.finite() ? this.m * $.canvas.width + this.b : $.canvas.height;
     },
     draw: function (ctx) {
         ctx.strokeStyle = '#73ff00';
@@ -2934,6 +2936,7 @@ module.exports = $.ClearSprite({
     }
 });
 
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"dragonjs":13}],61:[function(require,module,exports){
 var $ = require('dragonjs');
 
@@ -2994,12 +2997,7 @@ module.exports = function (name, pos) {
         depth: 100,
         collisionSets: [
             $.collisions
-        ],
-        on: {
-            'collide/screendrag': function () {
-                console.debug('dragging!');
-            }
-        }
+        ]
     }).extend({
         update: function () {
             if (this.dragging) {

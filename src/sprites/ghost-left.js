@@ -7,7 +7,7 @@ module.exports = Ghost().extend({
         var xpos = $.screen('flush').sprite('static').mask.right;
         this.move($.Point(
             xpos,
-            line.solveY(xpos)
+            line.solveY(xpos) || 0
         ));
     }
 });

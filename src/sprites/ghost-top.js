@@ -6,7 +6,7 @@ module.exports = Ghost().extend({
     update: function () {
         var ypos = $.screen('flush').sprite('static').pos.y - this.size.height;
         this.move($.Point(
-            line.solveX(ypos),
+            line.solveX(ypos) || $.canvas.width / 2,
             ypos
         ));
     }
